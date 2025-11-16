@@ -132,6 +132,10 @@ def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_titl
     try:
         import anthropic
         
+        # Validate PDF text
+        if not pdf_text or len(pdf_text.strip()) < 100:
+            return None, "PDF text is too short or empty. Please upload a PDF with more content."
+        
         # Validate and clean API key
         api_key = api_key.strip()
         if not api_key.startswith('sk-ant-'):
@@ -143,15 +147,19 @@ def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_titl
         usmle_outline = load_usmle_outline()
         
         # Create the prompt for Claude
+        # Limit PDF text to ~15k chars to avoid token limits
+        pdf_content = pdf_text[:15000] if pdf_text else ""
+        usmle_content = usmle_outline[:10000] if usmle_outline else ""
+        
         prompt = f"""You are an expert medical educator creating ANKI flashcards for USMLE STEP 1 preparation.
 
 Analyze the following medical lecture content and generate {num_cards} high-quality flashcard proposals.
 
 LECTURE CONTENT:
-{pdf_text[:15000]}  # Limit to ~15k chars to avoid token limits
+{pdf_content}
 
 {"USMLE CONTENT OUTLINE (for categorization):" if usmle_outline else ""}
-{usmle_outline[:10000] if usmle_outline else ""}
+{usmle_content}
 
 INSTRUCTIONS:
 1. Focus on high-yield concepts likely to appear on STEP 1
@@ -1141,6 +1149,16 @@ with tab2:
     if not st.session_state.pdf_text:
         st.warning("⚠️ Please upload a PDF first in the 'Upload PDF' tab")
     else:
+        # Show PDF content stats
+        pdf_length = len(st.session_state.pdf_text)
+        pdf_words = len(st.session_state.pdf_text.split())
+        
+        st.info(f"""
+        📄 **PDF loaded:** {st.session_state.pdf_metadata.get('title', 'Unknown')}  
+        📊 **Content:** {pdf_words:,} words, {pdf_length:,} characters  
+        💡 Claude will analyze the first ~15,000 characters
+        """)
+        
         # AI-powered generation section
         st.subheader("🤖 Generate with Claude AI")
         
@@ -1156,6 +1174,17 @@ with tab2:
                 """)
             else:
                 st.warning("⚠️ Please enter your Anthropic API key in the sidebar to use AI generation")
+        
+        # Show what content will be sent to Claude
+        with st.expander("🔍 Preview content that will be sent to Claude"):
+            preview_length = min(15000, len(st.session_state.pdf_text))
+            st.text_area(
+                f"First {preview_length:,} characters of your PDF:",
+                value=st.session_state.pdf_text[:preview_length],
+                height=200,
+                disabled=True,
+                help="This is the content Claude will use to generate flashcards"
+            )
         
         with col2:
             if st.button("🚀 Generate with AI", type="primary", disabled='api_key' not in st.session_state or not st.session_state.api_key):
