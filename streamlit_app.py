@@ -13,47 +13,292 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
+# Custom CSS with Dartmouth College branding
 st.markdown("""
 <style>
+    /* Dartmouth Color Palette */
+    :root {
+        --dartmouth-green: #00693E;
+        --forest-green: #12312B;
+        --river-blue: #267ABA;
+        --river-navy: #003C73;
+        --gray-1: #F7F7F7;
+        --gray-2: #E2E2E2;
+        --gray-3: #707070;
+        --white: #FFFFFF;
+        --black: #000000;
+    }
+    
+    /* Main header styling */
     .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #00693E 0%, #003C73 100%);
         color: white;
         padding: 2rem;
         border-radius: 10px;
         margin-bottom: 2rem;
         text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 105, 62, 0.2);
     }
+    
+    /* Override Streamlit default colors */
+    .stButton>button {
+        background-color: #00693E !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton>button:hover {
+        background-color: #004d2d !important;
+        box-shadow: 0 4px 8px rgba(0, 105, 62, 0.3) !important;
+        transform: translateY(-1px) !important;
+    }
+    
+    .stButton>button[kind="primary"] {
+        background-color: #00693E !important;
+    }
+    
+    /* Tabs styling */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #F7F7F7;
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: white;
+        color: #12312B;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #00693E !important;
+        color: white !important;
+    }
+    
+    /* Sidebar styling */
+    [data-testid="stSidebar"] {
+        background-color: #F7F7F7;
+        border-right: 2px solid #00693E;
+    }
+    
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #00693E;
+    }
+    
+    /* Card containers */
     .card-container {
         background: white;
-        border: 2px solid #e1e8ed;
+        border: 2px solid #E2E2E2;
         border-radius: 8px;
         padding: 1.5rem;
         margin: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 105, 62, 0.1);
+        transition: all 0.3s ease;
     }
+    
+    .card-container:hover {
+        border-color: #00693E;
+        box-shadow: 0 4px 8px rgba(0, 105, 62, 0.15);
+    }
+    
     .selected-card {
-        background-color: #f0f8ff;
-        border-color: #667eea;
+        background-color: #f0f9f5;
+        border-color: #00693E;
+        border-width: 3px;
     }
+    
     .card-header {
         font-weight: 600;
-        color: #667eea;
+        color: #00693E;
         margin-bottom: 0.5rem;
+        font-size: 1.1rem;
     }
+    
+    /* Stats and info boxes */
     .stats-box {
-        background: #f8f9fa;
+        background: #F7F7F7;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 4px solid #667eea;
+        border-left: 4px solid #00693E;
     }
+    
+    /* Tags and badges */
     .tag {
-        background-color: #e9ecef;
-        padding: 0.25rem 0.5rem;
+        background-color: #F7F7F7;
+        color: #00693E;
+        padding: 0.25rem 0.75rem;
         border-radius: 4px;
         font-size: 0.85rem;
         margin-right: 0.5rem;
         display: inline-block;
+        border: 1px solid #E2E2E2;
+        font-weight: 500;
+    }
+    
+    /* Text input and text area styling */
+    .stTextInput>div>div>input,
+    .stTextArea>div>div>textarea {
+        border-color: #E2E2E2 !important;
+        border-radius: 6px !important;
+    }
+    
+    .stTextInput>div>div>input:focus,
+    .stTextArea>div>div>textarea:focus {
+        border-color: #00693E !important;
+        box-shadow: 0 0 0 1px #00693E !important;
+    }
+    
+    /* Select box styling */
+    .stSelectbox>div>div {
+        border-color: #E2E2E2 !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Headers */
+    h1, h2, h3 {
+        color: #12312B !important;
+    }
+    
+    h1 {
+        border-bottom: 3px solid #00693E;
+        padding-bottom: 0.5rem;
+    }
+    
+    /* Info, warning, success boxes */
+    .stAlert {
+        border-radius: 8px !important;
+    }
+    
+    div[data-baseweb="notification"] {
+        border-radius: 8px !important;
+    }
+    
+    /* Success messages */
+    .stSuccess {
+        background-color: #e6f4ea !important;
+        color: #00693E !important;
+        border-left: 4px solid #00693E !important;
+    }
+    
+    /* Info messages */
+    .stInfo {
+        background-color: #e3f2fd !important;
+        color: #267ABA !important;
+        border-left: 4px solid #267ABA !important;
+    }
+    
+    /* Warning messages */
+    .stWarning {
+        background-color: #fff8e1 !important;
+        color: #643C20 !important;
+        border-left: 4px solid #F5DC69 !important;
+    }
+    
+    /* Error messages */
+    .stError {
+        background-color: #fde8ec !important;
+        color: #9D162E !important;
+        border-left: 4px solid #9D162E !important;
+    }
+    
+    /* Expander styling */
+    .streamlit-expanderHeader {
+        background-color: #F7F7F7 !important;
+        border-radius: 6px !important;
+        color: #00693E !important;
+        font-weight: 600 !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        background-color: #E2E2E2 !important;
+    }
+    
+    /* Metric styling */
+    [data-testid="stMetricValue"] {
+        color: #00693E !important;
+        font-size: 1.5rem !important;
+        font-weight: 600 !important;
+    }
+    
+    /* File uploader */
+    [data-testid="stFileUploader"] {
+        border: 2px dashed #00693E !important;
+        border-radius: 8px !important;
+        background-color: #F7F7F7 !important;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: #004d2d !important;
+        background-color: #f0f9f5 !important;
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div {
+        background-color: #00693E !important;
+    }
+    
+    /* Checkboxes */
+    .stCheckbox {
+        color: #12312B !important;
+    }
+    
+    /* Links */
+    a {
+        color: #267ABA !important;
+        text-decoration: none !important;
+    }
+    
+    a:hover {
+        color: #003C73 !important;
+        text-decoration: underline !important;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: #E2E2E2 !important;
+    }
+    
+    /* Markdown */
+    .stMarkdown {
+        color: #12312B !important;
+    }
+    
+    /* Download button special styling */
+    .stDownloadButton>button {
+        background-color: #267ABA !important;
+        color: white !important;
+    }
+    
+    .stDownloadButton>button:hover {
+        background-color: #003C73 !important;
+    }
+    
+    /* Slider */
+    .stSlider > div > div > div {
+        background-color: #00693E !important;
+    }
+    
+    /* Radio buttons */
+    .stRadio > label {
+        color: #12312B !important;
+    }
+    
+    /* Number input */
+    .stNumberInput > div > div > input {
+        border-color: #E2E2E2 !important;
+    }
+    
+    .stNumberInput > div > div > input:focus {
+        border-color: #00693E !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1050,7 +1295,7 @@ with st.sidebar:
         st.markdown("""
         <div style="text-align: center; margin-bottom: 1rem;">
             <a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank" style="text-decoration: none;">
-                <div style="padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-align: center; font-weight: bold;">
+                <div style="padding: 10px; background: linear-gradient(135deg, #00693E 0%, #003C73 100%); color: white; border-radius: 8px; text-align: center; font-weight: bold;">
                     Neuroscience-Informed<br>Learning & Education Lab
                 </div>
             </a>
@@ -1401,7 +1646,7 @@ with tab3:
             st.markdown(f"""
             <div class="stats-box">
                 <h3>📊 Selection Stats</h3>
-                <p><strong>Selected:</strong> <span style="color: #667eea; font-size: 1.5rem;">{selected_cards}</span> / {total_cards} cards</p>
+                <p><strong>Selected:</strong> <span style="color: #00693E; font-size: 1.5rem; font-weight: 600;">{selected_cards}</span> / {total_cards} cards</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -1630,9 +1875,9 @@ with tab4:
 # Footer
 st.divider()
 st.markdown("""
-<div style="text-align: center; color: #7f8c8d; padding: 2rem;">
+<div style="text-align: center; color: #707070; padding: 2rem;">
     <p>📚 GEISEL ANKI Generator | Optimized for USMLE Preparation</p>
     <p><small>Upload PDFs, generate flashcards, and export to ANKI with ease</small></p>
-    <p><small><a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank" style="color: #667eea;">Neuroscience-Informed Learning & Education Lab</a> | Geisel School of Medicine at Dartmouth</small></p>
+    <p><small><a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank" style="color: #00693E; font-weight: 600;">Neuroscience-Informed Learning & Education Lab</a> | Geisel School of Medicine at Dartmouth</small></p>
 </div>
 """, unsafe_allow_html=True)
