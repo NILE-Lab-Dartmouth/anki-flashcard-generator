@@ -272,7 +272,6 @@ def create_medical_model():
                 'name': 'Card 1',
                 'qfmt': '''<div class="card-front">
     <div class="question">{{Front}}</div>
-    <div class="source">{{Source}}</div>
 </div>''',
                 'afmt': '''<div class="card-back">
     <div class="question">{{Front}}</div>
@@ -290,7 +289,7 @@ def create_medical_model():
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 18px;
     text-align: left;
-    color: #2c3e50;
+    color: #12312B;
     background-color: #ffffff;
     padding: 20px;
     line-height: 1.6;
@@ -304,30 +303,31 @@ def create_medical_model():
 .question {
     font-size: 20px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #12312B;
     margin-bottom: 15px;
     padding: 15px;
-    background-color: #f8f9fa;
-    border-left: 4px solid #667eea;
+    background-color: #f7f7f7;
+    border-left: 4px solid #00693E;
     border-radius: 4px;
 }
 
 .answer {
     font-size: 18px;
-    color: #34495e;
+    color: #000000;
     margin: 20px 0;
     padding: 15px;
-    background-color: #e8f4f8;
+    background-color: #f7f7f7;
     border-radius: 4px;
+    border-left: 3px solid #267ABA;
 }
 
 .source {
     font-size: 14px;
-    color: #7f8c8d;
+    color: #707070;
     font-style: italic;
     margin-top: 15px;
     padding-top: 10px;
-    border-top: 1px solid #ecf0f1;
+    border-top: 1px solid #e2e2e2;
 }
 
 .categories {
@@ -337,23 +337,24 @@ def create_medical_model():
 
 .category {
     display: inline-block;
-    background-color: #f0f3f5;
-    color: #667eea;
+    background-color: #f7f7f7;
+    color: #00693E;
     padding: 4px 8px;
     border-radius: 4px;
     margin-right: 8px;
     font-weight: 500;
+    border: 1px solid #e2e2e2;
 }
 
 hr {
     border: none;
-    border-top: 2px solid #ecf0f1;
+    border-top: 2px solid #e2e2e2;
     margin: 15px 0;
 }
 
 .cloze {
     font-weight: bold;
-    color: #3498db;
+    color: #00693E;
 }'''
     )
 
@@ -378,7 +379,6 @@ def create_cloze_model():
                 'name': 'Cloze',
                 'qfmt': '''<div class="card-front">
     <div class="question">{{cloze:Text}}</div>
-    <div class="source">{{Source}}</div>
 </div>''',
                 'afmt': '''<div class="card-back">
     <div class="question">{{cloze:Text}}</div>
@@ -394,7 +394,7 @@ def create_cloze_model():
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 18px;
     text-align: left;
-    color: #2c3e50;
+    color: #12312B;
     background-color: #ffffff;
     padding: 20px;
     line-height: 1.6;
@@ -408,29 +408,46 @@ def create_cloze_model():
 .question {
     font-size: 20px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #12312B;
     margin-bottom: 15px;
     padding: 15px;
-    background-color: #f8f9fa;
-    border-left: 4px solid #667eea;
+    background-color: #f7f7f7;
+    border-left: 4px solid #00693E;
     border-radius: 4px;
 }
 
 .source {
     font-size: 14px;
-    color: #7f8c8d;
+    color: #707070;
     font-style: italic;
     margin-top: 15px;
     padding-top: 10px;
-    border-top: 1px solid #ecf0f1;
+    border-top: 1px solid #e2e2e2;
+}
+
+.categories {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.category {
+    display: inline-block;
+    background-color: #f7f7f7;
+    color: #00693E;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 500;
+    border: 1px solid #e2e2e2;
 }
 
 .cloze {
     font-weight: bold;
-    color: #667eea;
-    background-color: #e8f4f8;
+    color: #00693E;
+    background-color: #f7f7f7;
     padding: 2px 6px;
     border-radius: 3px;
+    border: 1px solid #e2e2e2;
 }''',
         model_type=genanki.Model.CLOZE
     )
@@ -654,20 +671,24 @@ def create_medical_model():
             {'name': 'Front'},
             {'name': 'Back'},
             {'name': 'Source'},
-            {'name': 'Tags'},
+            {'name': 'OrganSystem'},
+            {'name': 'USMLECategory'},
         ],
         templates=[
             {
                 'name': 'Card 1',
                 'qfmt': \'\'\'<div class="card-front">
     <div class="question">{{Front}}</div>
-    <div class="source">{{Source}}</div>
 </div>\'\'\',
                 'afmt': \'\'\'<div class="card-back">
     <div class="question">{{Front}}</div>
     <hr>
     <div class="answer">{{Back}}</div>
     <div class="source">{{Source}}</div>
+    <div class="categories">
+        <span class="category">🧬 {{OrganSystem}}</span>
+        <span class="category">📋 {{USMLECategory}}</span>
+    </div>
 </div>\'\'\',
             },
         ],
@@ -675,7 +696,7 @@ def create_medical_model():
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 18px;
     text-align: left;
-    color: #2c3e50;
+    color: #12312B;
     background-color: #ffffff;
     padding: 20px;
     line-height: 1.6;
@@ -689,41 +710,58 @@ def create_medical_model():
 .question {
     font-size: 20px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #12312B;
     margin-bottom: 15px;
     padding: 15px;
-    background-color: #f8f9fa;
-    border-left: 4px solid #667eea;
+    background-color: #f7f7f7;
+    border-left: 4px solid #00693E;
     border-radius: 4px;
 }
 
 .answer {
     font-size: 18px;
-    color: #34495e;
+    color: #000000;
     margin: 20px 0;
     padding: 15px;
-    background-color: #e8f4f8;
+    background-color: #f7f7f7;
     border-radius: 4px;
+    border-left: 3px solid #267ABA;
 }
 
 .source {
     font-size: 14px;
-    color: #7f8c8d;
+    color: #707070;
     font-style: italic;
     margin-top: 15px;
     padding-top: 10px;
-    border-top: 1px solid #ecf0f1;
+    border-top: 1px solid #e2e2e2;
+}
+
+.categories {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.category {
+    display: inline-block;
+    background-color: #f7f7f7;
+    color: #00693E;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 500;
+    border: 1px solid #e2e2e2;
 }
 
 hr {
     border: none;
-    border-top: 2px solid #ecf0f1;
+    border-top: 2px solid #e2e2e2;
     margin: 15px 0;
 }
 
 .cloze {
     font-weight: bold;
-    color: #3498db;
+    color: #00693E;
 }\'\'\'
     )
 
@@ -737,18 +775,22 @@ def create_cloze_model():
         fields=[
             {'name': 'Text'},
             {'name': 'Source'},
-            {'name': 'Tags'},
+            {'name': 'OrganSystem'},
+            {'name': 'USMLECategory'},
         ],
         templates=[
             {
                 'name': 'Cloze',
                 'qfmt': \'\'\'<div class="card-front">
     <div class="question">{{cloze:Text}}</div>
-    <div class="source">{{Source}}</div>
 </div>\'\'\',
                 'afmt': \'\'\'<div class="card-back">
     <div class="question">{{cloze:Text}}</div>
     <div class="source">{{Source}}</div>
+    <div class="categories">
+        <span class="category">🧬 {{OrganSystem}}</span>
+        <span class="category">📋 {{USMLECategory}}</span>
+    </div>
 </div>\'\'\',
             },
         ],
@@ -756,7 +798,7 @@ def create_cloze_model():
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 18px;
     text-align: left;
-    color: #2c3e50;
+    color: #12312B;
     background-color: #ffffff;
     padding: 20px;
     line-height: 1.6;
@@ -770,29 +812,46 @@ def create_cloze_model():
 .question {
     font-size: 20px;
     font-weight: 600;
-    color: #2c3e50;
+    color: #12312B;
     margin-bottom: 15px;
     padding: 15px;
-    background-color: #f8f9fa;
-    border-left: 4px solid #667eea;
+    background-color: #f7f7f7;
+    border-left: 4px solid #00693E;
     border-radius: 4px;
 }
 
 .source {
     font-size: 14px;
-    color: #7f8c8d;
+    color: #707070;
     font-style: italic;
     margin-top: 15px;
     padding-top: 10px;
-    border-top: 1px solid #ecf0f1;
+    border-top: 1px solid #e2e2e2;
+}
+
+.categories {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.category {
+    display: inline-block;
+    background-color: #f7f7f7;
+    color: #00693E;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 500;
+    border: 1px solid #e2e2e2;
 }
 
 .cloze {
     font-weight: bold;
-    color: #667eea;
-    background-color: #e8f4f8;
+    color: #00693E;
+    background-color: #f7f7f7;
     padding: 2px 6px;
     border-radius: 3px;
+    border: 1px solid #e2e2e2;
 }\'\'\',
         model_type=genanki.Model.CLOZE
     )
