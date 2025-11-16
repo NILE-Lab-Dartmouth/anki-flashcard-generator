@@ -190,20 +190,20 @@ Generate the flashcards now:"""
         return cards, None
         
     except json.JSONDecodeError as e:
-        return None, f"Failed to parse Claude's response as JSON: {str(e)}"
+        return None, "Failed to parse Claude's response as JSON. Please try again."
     except ImportError:
         return None, "Please install the Anthropic library: pip install anthropic"
-    except anthropic.AuthenticationError as e:
-        return None, f"Authentication failed. Please check your API key is correct and has been copied fully. Error: {str(e)}"
-    except anthropic.PermissionDeniedError as e:
-        return None, f"Permission denied. Make sure you have credits in your Anthropic account. Error: {str(e)}"
-    except anthropic.RateLimitError as e:
-        return None, f"Rate limit exceeded. Please wait a moment and try again. Error: {str(e)}"
+    except anthropic.AuthenticationError:
+        return None, "Authentication failed. Please check your API key is correct and has been copied fully."
+    except anthropic.PermissionDeniedError:
+        return None, "Permission denied. Make sure you have credits in your Anthropic account."
+    except anthropic.RateLimitError:
+        return None, "Rate limit exceeded. Please wait a moment and try again."
     except Exception as e:
-        error_msg = str(e)
-        if "invalid x-api-key" in error_msg.lower() or "authentication" in error_msg.lower():
+        error_msg = str(e).lower()
+        if "invalid x-api-key" in error_msg or "authentication" in error_msg:
             return None, "Invalid API key. Please double-check:\n1. Key starts with 'sk-ant-'\n2. No extra spaces\n3. Full key copied\n4. Key is active in console.anthropic.com"
-        return None, f"Error calling Claude API: {error_msg}"
+        return None, "Error calling Claude API. Please check your API key and try again."
 
 def create_medical_model():
     """Create a custom ANKI model for medical flashcards with styling"""
@@ -708,11 +708,19 @@ def get_download_link(content, filename, link_text):
 # MAIN APP
 # ============================================================================
 
-# Logo and Header
-col_logo, col_title = st.columns([1, 4])
+# Header
+st.markdown("""
+<div class="main-header">
+    <h1>📚 <a href="https://geiselmed.dartmouth.edu/md-program/curriculum-overview/foundation-study-skills/" target="_blank" style="color: white; text-decoration: none;">ANKI Flashcard Generator</a></h1>
+    <p><strong>Medical Learning Sciences Course</strong></p>
+    <p><strong>Geisel School of Medicine</strong></p>
+    <p>Transform medical lecture PDFs into high-quality ANKI flashcards for course exam and USMLE preparation</p>
+</div>
+""", unsafe_allow_html=True)
 
-with col_logo:
-    # Use relative path for logo - works on any platform
+# Sidebar
+with st.sidebar:
+    # Logo at top of sidebar
     import os
     logo_path = os.path.join(os.path.dirname(__file__), 'logo.jpg')
     
@@ -720,30 +728,26 @@ with col_logo:
         with open(logo_path, 'rb') as f:
             logo_data = base64.b64encode(f.read()).decode()
         st.markdown("""
-        <a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank">
-            <img src="data:image/jpeg;base64,{}" width="150">
-        </a>
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank">
+                <img src="data:image/jpeg;base64,{}" width="200">
+            </a>
+        </div>
         """.format(logo_data), unsafe_allow_html=True)
     else:
         # Fallback if logo not found
         st.markdown("""
-        <a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank" style="text-decoration: none;">
-            <div style="width: 150px; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-align: center; font-weight: bold;">
-                GEISEL<br>ANKI
-            </div>
-        </a>
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank" style="text-decoration: none;">
+                <div style="padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; text-align: center; font-weight: bold;">
+                    Neuroscience-Informed<br>Learning & Education Lab
+                </div>
+            </a>
+        </div>
         """, unsafe_allow_html=True)
-
-with col_title:
-    st.markdown("""
-    <div class="main-header">
-        <h1>📚 GEISEL ANKI Flashcard Generator</h1>
-        <p>Transform medical lecture PDFs into high-quality ANKI flashcards for USMLE preparation</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# Sidebar
-with st.sidebar:
+    
+    st.divider()
+    
     st.header("📖 Workflow Steps")
     st.markdown("""
     1. **Upload PDF** - Upload your lecture slides
@@ -756,23 +760,26 @@ with st.sidebar:
     
     st.header("🤖 Claude AI Settings")
     
+    # Get the secret access code from Streamlit secrets
+    secret_code = st.secrets.get("ACCESS_CODE", "")
+    
     # API Key input with passcode support
     api_key_input = st.text_input(
         "Anthropic API Key or Access Code",
         type="password",
-        help="Enter your personal Anthropic API key OR enter 'GEISEL03755' to use the lab-provided key",
-        placeholder="sk-ant-... or GEISEL03755"
+        help="Enter your personal Anthropic API key OR the access code provided by your instructor",
+        placeholder="sk-ant-... or access code"
     )
     
     # Check if it's the passcode or an API key
     if api_key_input:
         api_key_input = api_key_input.strip()
         
-        if api_key_input == "GEISEL03755":
+        if secret_code and api_key_input == secret_code:
             # Use lab-provided API key from secrets
             if "ANTHROPIC_API_KEY" in st.secrets:
                 st.session_state.api_key = st.secrets["ANTHROPIC_API_KEY"]
-                st.success("✅ Using Geisel lab-provided API key")
+                st.success("✅ Using lab-provided API key")
             else:
                 st.error("❌ Lab API key not configured. Please contact administrator.")
                 st.session_state.api_key = None
@@ -782,7 +789,7 @@ with st.sidebar:
                 st.success("✅ Using your personal API key")
                 st.session_state.api_key = api_key_input
             else:
-                st.error("❌ Invalid format. Key should start with 'sk-ant-' or use access code 'GEISEL03755'")
+                st.error("❌ Invalid format. Key should start with 'sk-ant-' or use the access code provided by your instructor")
                 st.session_state.api_key = None
     else:
         st.warning("⚠️ Enter API key or access code to use Claude generation")
@@ -874,6 +881,9 @@ with tab1:
 # TAB 2: Generate Cards
 with tab2:
     st.header("Generate Flashcard Proposals")
+    
+    # AI Warning
+    st.warning("⚠️ **Caution:** Generative AI can make mistakes. Always verify the output. If you are not able to verify the output, consult an expert.")
     
     if not st.session_state.pdf_text:
         st.warning("⚠️ Please upload a PDF first in the 'Upload PDF' tab")
