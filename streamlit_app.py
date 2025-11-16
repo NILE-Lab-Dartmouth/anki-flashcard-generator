@@ -362,7 +362,8 @@ def create_cloze_model():
         fields=[
             {'name': 'Text'},
             {'name': 'Source'},
-            {'name': 'Tags'},
+            {'name': 'OrganSystem'},
+            {'name': 'USMLECategory'},
         ],
         templates=[
             {
@@ -374,6 +375,10 @@ def create_cloze_model():
                 'afmt': '''<div class="card-back">
     <div class="question">{{cloze:Text}}</div>
     <div class="source">{{Source}}</div>
+    <div class="categories">
+        <span class="category">🧬 {{OrganSystem}}</span>
+        <span class="category">📋 {{USMLECategory}}</span>
+    </div>
 </div>''',
             },
         ],
@@ -542,7 +547,8 @@ def generate_apkg_file(selected_cards, deck_name):
                     fields=[
                         card.get('text', ''),
                         card.get('source', ''),
-                        card.get('tags', '')
+                        card.get('organ_system', ''),
+                        card.get('usmle_category', '')
                     ]
                 )
             else:
@@ -553,7 +559,8 @@ def generate_apkg_file(selected_cards, deck_name):
                         card.get('front', ''),
                         card.get('back', ''),
                         card.get('source', ''),
-                        card.get('tags', '')
+                        card.get('organ_system', ''),
+                        card.get('usmle_category', '')
                     ]
                 )
             
@@ -870,7 +877,8 @@ def create_deck():
                 fields=[
                     card.get('text', ''),
                     card.get('source', ''),
-                    card.get('tags', '')
+                    card.get('organ_system', ''),
+                    card.get('usmle_category', '')
                 ]
             )
         else:
@@ -881,7 +889,8 @@ def create_deck():
                     card.get('front', ''),
                     card.get('back', ''),
                     card.get('source', ''),
-                    card.get('tags', '')
+                    card.get('organ_system', ''),
+                    card.get('usmle_category', '')
                 ]
             )
         
