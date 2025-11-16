@@ -1,0 +1,4 @@
+#Run Anki Creator 3.0
+
+cd C:\Users\f006q7g\OneDrive - Dartmouth College\Research\MedEdResearch\AI in Education\Anki Creator\Code\Anki Creator 3.0 Claude
+
