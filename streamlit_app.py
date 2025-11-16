@@ -775,7 +775,16 @@ with st.sidebar:
     if api_key_input:
         api_key_input = api_key_input.strip()
         
+        # Check if input matches the configured access code OR the default code
+        # This allows the code to work even if secrets aren't set up yet
+        is_valid_access_code = False
         if secret_code and api_key_input == secret_code:
+            is_valid_access_code = True
+        elif api_key_input == "GEISEL03755":
+            # Also accept the default code for backward compatibility
+            is_valid_access_code = True
+            
+        if is_valid_access_code:
             # Use lab-provided API key from secrets
             if "ANTHROPIC_API_KEY" in st.secrets:
                 st.session_state.api_key = st.secrets["ANTHROPIC_API_KEY"]
@@ -783,14 +792,14 @@ with st.sidebar:
             else:
                 st.error("❌ Lab API key not configured. Please contact administrator.")
                 st.session_state.api_key = None
-        else:
+        elif api_key_input.startswith('sk-ant-'):
             # Use user's own API key
-            if api_key_input.startswith('sk-ant-'):
-                st.success("✅ Using your personal API key")
-                st.session_state.api_key = api_key_input
-            else:
-                st.error("❌ Invalid format. Key should start with 'sk-ant-' or use the access code provided by your instructor")
-                st.session_state.api_key = None
+            st.success("✅ Using your personal API key")
+            st.session_state.api_key = api_key_input
+        else:
+            # Invalid format
+            st.error("❌ Invalid format. Key should start with 'sk-ant-' or use the access code provided by your instructor")
+            st.session_state.api_key = None
     else:
         st.warning("⚠️ Enter API key or access code to use Claude generation")
         st.session_state.api_key = None
