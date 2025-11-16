@@ -1050,6 +1050,13 @@ with tab3:
                     st.session_state.card_selection[i] = False
                 st.rerun()
         
+        # Instructions
+        if selected_cards > 0:
+            st.info(f"""
+            ℹ️ **Next Step:** Once you've selected all the cards you want ({selected_cards} currently selected), 
+            go to the **Export** tab to download your flashcards.
+            """)
+        
         st.divider()
         
         # Display cards
@@ -1077,7 +1084,16 @@ with tab3:
                     """, unsafe_allow_html=True)
                     
                     if card.get('type') == 'cloze':
-                        st.markdown(f"**Text:** {card.get('text', '')}")
+                        import re
+                        cloze_text = card.get('text', '')
+                        # Extract the cloze deletion content
+                        matches = re.findall(r'\{\{c\d+::(.*?)\}\}', cloze_text)
+                        # Show the text with the answer highlighted
+                        display_text = re.sub(r'\{\{c\d+::(.*?)\}\}', r'**[\1]**', cloze_text)
+                        st.markdown(f"**Text:** {display_text}")
+                        if matches:
+                            st.markdown(f"**Answer(s):** {', '.join(matches)}")
+                        st.markdown(f"*<small>In ANKI, the parts in [brackets] will be hidden</small>*", unsafe_allow_html=True)
                     else:
                         st.markdown(f"**Front:** {card.get('front', '')}")
                         st.markdown(f"**Back:** {card.get('back', '')}")
