@@ -756,31 +756,52 @@ with st.sidebar:
     
     st.header("🤖 Claude AI Settings")
     
-    # API Key input
-    api_key = st.text_input(
-        "Anthropic API Key",
+    # API Key input with passcode support
+    api_key_input = st.text_input(
+        "Anthropic API Key or Access Code",
         type="password",
-        help="Enter your Anthropic API key to use Claude for automatic card generation. Get one at https://console.anthropic.com/",
-        placeholder="sk-ant-api03-..."
+        help="Enter your personal Anthropic API key OR enter 'GEISEL03755' to use the lab-provided key",
+        placeholder="sk-ant-... or GEISEL03755"
     )
     
-    if api_key:
-        # Validate key format
-        api_key = api_key.strip()  # Remove whitespace
-        if api_key.startswith('sk-ant-'):
-            st.success("✅ API key format looks good")
-            st.session_state.api_key = api_key
+    # Check if it's the passcode or an API key
+    if api_key_input:
+        api_key_input = api_key_input.strip()
+        
+        if api_key_input == "GEISEL03755":
+            # Use lab-provided API key from secrets
+            if "ANTHROPIC_API_KEY" in st.secrets:
+                st.session_state.api_key = st.secrets["ANTHROPIC_API_KEY"]
+                st.success("✅ Using Geisel lab-provided API key")
+            else:
+                st.error("❌ Lab API key not configured. Please contact administrator.")
+                st.session_state.api_key = None
         else:
-            st.error("❌ Invalid format. Key should start with 'sk-ant-'")
-            st.session_state.api_key = None
+            # Use user's own API key
+            if api_key_input.startswith('sk-ant-'):
+                st.success("✅ Using your personal API key")
+                st.session_state.api_key = api_key_input
+            else:
+                st.error("❌ Invalid format. Key should start with 'sk-ant-' or use access code 'GEISEL03755'")
+                st.session_state.api_key = None
     else:
-        st.warning("⚠️ Enter API key to use Claude generation")
+        st.warning("⚠️ Enter API key or access code to use Claude generation")
         st.session_state.api_key = None
     
-    # Model selection
+    # Model selection - use default from secrets if available
+    default_model = st.secrets.get("DEFAULT_MODEL", "claude-sonnet-4-5-20250929")
+    model_options = ["claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-sonnet-3-5-20241022"]
+    
+    # Find the index of the default model
+    try:
+        default_index = model_options.index(default_model)
+    except ValueError:
+        default_index = 0
+    
     model = st.selectbox(
         "Claude Model",
-        ["claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-opus-4-20250514", "claude-sonnet-3-5-20241022"],
+        model_options,
+        index=default_index,
         help="Choose which Claude model to use"
     )
     st.session_state.claude_model = model
@@ -800,9 +821,12 @@ with st.sidebar:
     
     st.header("⚙️ Settings")
     
+    # Use default deck name from secrets if available
+    default_deck_name = st.secrets.get("DEFAULT_DECK_NAME", "Geisel Medical School - Lecture")
+    
     deck_name = st.text_input(
         "Deck Name",
-        value="Geisel Medical School - Lecture",
+        value=default_deck_name,
         help="Name for your ANKI deck"
     )
 
