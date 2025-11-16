@@ -103,8 +103,32 @@ def extract_pdf_text(pdf_file):
         st.error(f"Error extracting PDF text: {str(e)}")
         return None
 
+def load_usmle_outline():
+    """Load USMLE Content Outline from PDF"""
+    try:
+        import os
+        from pypdf import PdfReader
+        import io
+        
+        # Try to load from same directory as script
+        script_dir = os.path.dirname(__file__)
+        usmle_path = os.path.join(script_dir, 'USMLE_Content_Outline.pdf')
+        
+        if os.path.exists(usmle_path):
+            with open(usmle_path, 'rb') as f:
+                pdf_reader = PdfReader(f)
+                outline_text = []
+                # Extract first 30 pages (covers most of the outline)
+                for page in pdf_reader.pages[:30]:
+                    outline_text.append(page.extract_text())
+                return "\n".join(outline_text)
+        else:
+            return None
+    except Exception as e:
+        return None
+
 def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_title=""):
-    """Generate flashcards using Claude AI"""
+    """Generate flashcards using Claude AI with automatic USMLE categorization"""
     try:
         import anthropic
         
@@ -115,6 +139,9 @@ def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_titl
         
         client = anthropic.Anthropic(api_key=api_key)
         
+        # Load USMLE Content Outline
+        usmle_outline = load_usmle_outline()
+        
         # Create the prompt for Claude
         prompt = f"""You are an expert medical educator creating ANKI flashcards for USMLE STEP 1 preparation.
 
@@ -122,6 +149,9 @@ Analyze the following medical lecture content and generate {num_cards} high-qual
 
 LECTURE CONTENT:
 {pdf_text[:15000]}  # Limit to ~15k chars to avoid token limits
+
+{"USMLE CONTENT OUTLINE (for categorization):" if usmle_outline else ""}
+{usmle_outline[:10000] if usmle_outline else ""}
 
 INSTRUCTIONS:
 1. Focus on high-yield concepts likely to appear on STEP 1
@@ -133,7 +163,9 @@ INSTRUCTIONS:
 4. Use clear, unambiguous questions
 5. Keep answers concise (1-3 sentences max)
 6. Include clinical context when possible
-7. Add appropriate tags (e.g., neuroanatomy, high_yield, pathology)
+7. For each card, determine:
+   - The primary organ system (e.g., "Nervous System & Special Senses", "Cardiovascular System", "Multisystem Processes")
+   - The USMLE category from the Content Outline (e.g., "Infectious disorders", "Neoplasms", "Degenerative disorders")
 
 OUTPUT FORMAT:
 Return ONLY a valid JSON array with this exact structure (no markdown, no explanations):
@@ -144,13 +176,15 @@ Return ONLY a valid JSON array with this exact structure (no markdown, no explan
     "front": "What is the question?",
     "back": "This is the answer.",
     "source": "{lecture_title if lecture_title else 'Medical Lecture'}",
-    "tags": "tag1 tag2 tag3"
+    "organ_system": "Nervous System & Special Senses",
+    "usmle_category": "Infectious disorders"
   }},
   {{
     "type": "cloze",
     "text": "The {{{{c1::answer}}}} is hidden in this sentence.",
     "source": "{lecture_title if lecture_title else 'Medical Lecture'}",
-    "tags": "tag1 tag2"
+    "organ_system": "Nervous System & Special Senses",
+    "usmle_category": "Degenerative disorders"
   }}
 ]
 
@@ -159,6 +193,9 @@ IMPORTANT:
 - Use double curly braces {{{{c1::text}}}} for cloze deletions
 - Ensure all JSON is valid (proper escaping of quotes, etc.)
 - Generate exactly {num_cards} cards
+- Always include organ_system and usmle_category fields
+- Use the exact organ system names from the USMLE Content Outline
+- Be specific with USMLE categories (not just "disorders" but the specific type)
 
 Generate the flashcards now:"""
 
@@ -219,7 +256,8 @@ def create_medical_model():
             {'name': 'Front'},
             {'name': 'Back'},
             {'name': 'Source'},
-            {'name': 'Tags'},
+            {'name': 'OrganSystem'},
+            {'name': 'USMLECategory'},
         ],
         templates=[
             {
@@ -233,6 +271,10 @@ def create_medical_model():
     <hr>
     <div class="answer">{{Back}}</div>
     <div class="source">{{Source}}</div>
+    <div class="categories">
+        <span class="category">🧬 {{OrganSystem}}</span>
+        <span class="category">📋 {{USMLECategory}}</span>
+    </div>
 </div>''',
             },
         ],
@@ -280,6 +322,21 @@ def create_medical_model():
     border-top: 1px solid #ecf0f1;
 }
 
+.categories {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.category {
+    display: inline-block;
+    background-color: #f0f3f5;
+    color: #667eea;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 500;
+}
+
 hr {
     border: none;
     border-top: 2px solid #ecf0f1;
@@ -290,6 +347,79 @@ hr {
     font-weight: bold;
     color: #3498db;
 }'''
+    )
+
+def create_cloze_model():
+    """Create a custom ANKI cloze model for medical flashcards"""
+    import genanki
+    import random
+    
+    model_id = random.randrange(1 << 30, 1 << 31)
+    
+    return genanki.Model(
+        model_id,
+        'Medical Cloze (STEP 1)',
+        fields=[
+            {'name': 'Text'},
+            {'name': 'Source'},
+            {'name': 'Tags'},
+        ],
+        templates=[
+            {
+                'name': 'Cloze',
+                'qfmt': '''<div class="card-front">
+    <div class="question">{{cloze:Text}}</div>
+    <div class="source">{{Source}}</div>
+</div>''',
+                'afmt': '''<div class="card-back">
+    <div class="question">{{cloze:Text}}</div>
+    <div class="source">{{Source}}</div>
+</div>''',
+            },
+        ],
+        css='''.card {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 18px;
+    text-align: left;
+    color: #2c3e50;
+    background-color: #ffffff;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.card-front, .card-back {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.question {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+}
+
+.source {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-style: italic;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.cloze {
+    font-weight: bold;
+    color: #667eea;
+    background-color: #e8f4f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+}''',
+        model_type=genanki.Model.CLOZE
     )
 
 def fix_anki_database(apkg_path):
@@ -394,22 +524,39 @@ def generate_apkg_file(selected_cards, deck_name):
         import tempfile
         from pathlib import Path
         
-        # Create model and deck
-        model = create_medical_model()
+        # Create both models
+        basic_model = create_medical_model()
+        cloze_model = create_cloze_model()
+        
         deck_id = random.randrange(1 << 30, 1 << 31)
         deck = genanki.Deck(deck_id, deck_name)
         
-        # Add cards
+        # Add cards with appropriate model
         for card in selected_cards:
-            note = genanki.Note(
-                model=model,
-                fields=[
-                    card.get('front', card.get('text', '')),  # Handle both basic and cloze
-                    card.get('back', ''),
-                    card.get('source', ''),
-                    card.get('tags', '')
-                ]
-            )
+            card_type = card.get('type', 'basic').lower()
+            
+            if card_type == 'cloze':
+                # Cloze card - use cloze model with Text field
+                note = genanki.Note(
+                    model=cloze_model,
+                    fields=[
+                        card.get('text', ''),
+                        card.get('source', ''),
+                        card.get('tags', '')
+                    ]
+                )
+            else:
+                # Basic card - use basic model with Front/Back fields
+                note = genanki.Note(
+                    model=basic_model,
+                    fields=[
+                        card.get('front', ''),
+                        card.get('back', ''),
+                        card.get('source', ''),
+                        card.get('tags', '')
+                    ]
+                )
+            
             deck.add_note(note)
         
         # Generate package in temporary file
@@ -565,6 +712,76 @@ hr {
 }\'\'\'
     )
 
+def create_cloze_model():
+    \"\"\"Create a custom ANKI cloze model for medical flashcards\"\"\"
+    model_id = random.randrange(1 << 30, 1 << 31)
+    
+    return genanki.Model(
+        model_id,
+        'Medical Cloze (STEP 1)',
+        fields=[
+            {'name': 'Text'},
+            {'name': 'Source'},
+            {'name': 'Tags'},
+        ],
+        templates=[
+            {
+                'name': 'Cloze',
+                'qfmt': \'\'\'<div class="card-front">
+    <div class="question">{{cloze:Text}}</div>
+    <div class="source">{{Source}}</div>
+</div>\'\'\',
+                'afmt': \'\'\'<div class="card-back">
+    <div class="question">{{cloze:Text}}</div>
+    <div class="source">{{Source}}</div>
+</div>\'\'\',
+            },
+        ],
+        css=\'\'\'.card {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 18px;
+    text-align: left;
+    color: #2c3e50;
+    background-color: #ffffff;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.card-front, .card-back {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.question {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #667eea;
+    border-radius: 4px;
+}
+
+.source {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-style: italic;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.cloze {
+    font-weight: bold;
+    color: #667eea;
+    background-color: #e8f4f8;
+    padding: 2px 6px;
+    border-radius: 3px;
+}\'\'\',
+        model_type=genanki.Model.CLOZE
+    )
+
 def fix_anki_database(apkg_path):
     \"\"\"Fix ANKI database for compatibility with ANKI 2.1.28+\"\"\"
     print("\\\\n🔧 Fixing database for ANKI 2.1.28+ compatibility...")
@@ -635,21 +852,39 @@ def create_deck():
     
     print(f"\\\\n📖 Loading {len(FLASHCARDS)} embedded flashcards...")
     
-    model = create_medical_model()
+    # Create both models
+    basic_model = create_medical_model()
+    cloze_model = create_cloze_model()
+    
     deck_id = random.randrange(1 << 30, 1 << 31)
     deck = genanki.Deck(deck_id, deck_name)
     
     print(f"\\\\n🔨 Creating ANKI notes...")
     for i, card in enumerate(FLASHCARDS, 1):
-        note = genanki.Note(
-            model=model,
-            fields=[
-                card.get('front', ''),
-                card.get('back', ''),
-                card.get('source', ''),
-                card.get('tags', '')
-            ]
-        )
+        card_type = card.get('type', 'basic').lower()
+        
+        if card_type == 'cloze':
+            # Cloze card - use cloze model with Text field
+            note = genanki.Note(
+                model=cloze_model,
+                fields=[
+                    card.get('text', ''),
+                    card.get('source', ''),
+                    card.get('tags', '')
+                ]
+            )
+        else:
+            # Basic card - use basic model with Front/Back fields
+            note = genanki.Note(
+                model=basic_model,
+                fields=[
+                    card.get('front', ''),
+                    card.get('back', ''),
+                    card.get('source', ''),
+                    card.get('tags', '')
+                ]
+            )
+        
         deck.add_note(note)
         if i % 10 == 0 or i == len(FLASHCARDS):
             print(f"   Progress: {i}/{len(FLASHCARDS)} notes created...")
@@ -960,7 +1195,29 @@ with tab2:
                 )
             
             source = st.text_input("Source", placeholder="Lecture name or page reference")
-            tags = st.text_input("Tags", placeholder="neuroanatomy high_yield (space-separated)")
+            
+            # Organ system and USMLE category instead of generic tags
+            organ_system = st.selectbox("Organ System", [
+                "Nervous System & Special Senses",
+                "Cardiovascular System",
+                "Respiratory System",
+                "Gastrointestinal System",
+                "Renal & Urinary System",
+                "Endocrine System",
+                "Musculoskeletal System",
+                "Skin & Subcutaneous Tissue",
+                "Blood & Lymphoreticular System",
+                "Immune System",
+                "Male and Transgender Reproductive System",
+                "Female and Transgender Reproductive System & Breast",
+                "Pregnancy, Childbirth, & the Puerperium",
+                "Multisystem Processes & Disorders",
+                "Behavioral Health",
+                "Human Development",
+                "Other"
+            ])
+            
+            usmle_category = st.text_input("USMLE Category", placeholder="e.g., Infectious disorders, Neoplasms, Degenerative disorders")
             
             submitted = st.form_submit_button("➕ Add Card")
             
@@ -972,7 +1229,8 @@ with tab2:
                             "front": front,
                             "back": back,
                             "source": source,
-                            "tags": tags
+                            "organ_system": organ_system,
+                            "usmle_category": usmle_category
                         }
                         st.session_state.flashcards.append(new_card)
                         st.session_state.card_selection[len(st.session_state.flashcards) - 1] = True
@@ -984,7 +1242,8 @@ with tab2:
                             "type": "cloze",
                             "text": cloze_text,
                             "source": source,
-                            "tags": tags
+                            "organ_system": organ_system,
+                            "usmle_category": usmle_category
                         }
                         st.session_state.flashcards.append(new_card)
                         st.session_state.card_selection[len(st.session_state.flashcards) - 1] = True
@@ -1004,7 +1263,8 @@ with tab2:
                     "front": "Question here?",
                     "back": "Answer here",
                     "source": "Lecture Name",
-                    "tags": "tag1 tag2"
+                    "organ_system": "Nervous System & Special Senses",
+                    "usmle_category": "Infectious disorders"
                 }
             ]
             ```
@@ -1110,9 +1370,14 @@ with tab3:
                     if card.get('source'):
                         st.markdown(f"*Source: {card['source']}*")
                     
-                    if card.get('tags'):
-                        tags_html = ' '.join([f'<span class="tag">{tag}</span>' for tag in card['tags'].split()])
-                        st.markdown(tags_html, unsafe_allow_html=True)
+                    # Display organ system and USMLE category
+                    if card.get('organ_system') or card.get('usmle_category'):
+                        category_parts = []
+                        if card.get('organ_system'):
+                            category_parts.append(f'<span class="tag">🧬 {card["organ_system"]}</span>')
+                        if card.get('usmle_category'):
+                            category_parts.append(f'<span class="tag">📋 {card["usmle_category"]}</span>')
+                        st.markdown(' '.join(category_parts), unsafe_allow_html=True)
                     
                     st.markdown("</div>", unsafe_allow_html=True)
                 
