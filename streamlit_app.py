@@ -420,6 +420,26 @@ INSTRUCTIONS:
    - The primary organ system (e.g., "Nervous System & Special Senses", "Cardiovascular System", "Multisystem Processes")
    - The USMLE category from the Content Outline (e.g., "Infectious disorders", "Neoplasms", "Degenerative disorders")
 
+# CONTENT SELECTION STRATEGY
+
+## PRIORITIZE (High-Yield):
+- Mechanisms of disease and pathophysiology
+- Classic presentations and buzzwords
+- First-line treatments and interventions
+- Diagnostic criteria and lab findings
+- Embryology and anatomy with clinical correlations
+- Pharmacology (mechanism, side effects, contraindications)
+- Epidemiology (most common, risk factors)
+- Comparisons and differentials ("X vs Y")
+- Content that appears in multiple contexts
+- Information emphasized by the lecturer (repeated, bolded, "important")
+
+## AVOID (Low-Yield):
+- Administrative information (dates, schedules, grading)
+- Overly detailed minutiae not clinically relevant
+- Purely historical information without clinical application
+- Instructor opinions without evidence basis
+
 OUTPUT FORMAT:
 Return ONLY a valid JSON array with this exact structure (no markdown, no explanations):
 
