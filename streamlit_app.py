@@ -373,7 +373,7 @@ def load_usmle_outline():
         return None
 
 def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_title=""):
-    """Generate flashcards using Claude AI with automatic USMLE categorization"""
+    """Generate flashcards using GenAI"""
     try:
         import anthropic
         
@@ -500,7 +500,7 @@ Generate the flashcards now:"""
         return cards, None
         
     except json.JSONDecodeError as e:
-        return None, "Failed to parse Claude's response as JSON. Please try again."
+        return None, "Failed to parse LLM's response as JSON. Please try again."
     except ImportError:
         return None, "Please install the Anthropic library: pip install anthropic"
     except anthropic.AuthenticationError:
@@ -1402,10 +1402,10 @@ with st.sidebar:
     num_cards = st.slider(
         "Cards to Generate",
         min_value=5,
-        max_value=50,
+        max_value=35,
         value=20,
         step=5,
-        help="How many flashcards should Claude generate?"
+        help="How many flashcards do you want to generate?"
     )
     st.session_state.num_cards = num_cards
     
@@ -1480,11 +1480,11 @@ with tab2:
         st.info(f"""
         📄 **PDF loaded:** {st.session_state.pdf_metadata.get('title', 'Unknown')}  
         📊 **Content:** {pdf_words:,} words, {pdf_length:,} characters  
-        💡 Claude will analyze the first ~15,000 characters
+        💡 GenAI will analyze the first ~15,000 characters
         """)
         
         # AI-powered generation section
-        st.subheader("🤖 Generate with Claude AI")
+        st.subheader("🤖 Generate with GenAI")
         
         col1, col2 = st.columns([3, 1])
         
@@ -1493,26 +1493,26 @@ with tab2:
                 st.info(f"""
                 💡 **Ready to generate {st.session_state.get('num_cards', 20)} flashcards**
                 
-                Claude will analyze your PDF and create high-quality STEP 1 flashcards automatically.
+                GenAI will analyze your PDF and create high-quality STEP 1 flashcards automatically.
                 This typically takes 10-30 seconds.
                 """)
             else:
                 st.warning("⚠️ Please enter your Anthropic API key in the sidebar to use AI generation")
         
         # Show what content will be sent to Claude
-        with st.expander("🔍 Preview content that will be sent to Claude"):
+        with st.expander("🔍 Preview content that will be sent to the LLM"):
             preview_length = min(15000, len(st.session_state.pdf_text))
             st.text_area(
                 f"First {preview_length:,} characters of your PDF:",
                 value=st.session_state.pdf_text[:preview_length],
                 height=200,
                 disabled=True,
-                help="This is the content Claude will use to generate flashcards"
+                help="This is the content the LLM will use to generate flashcards"
             )
         
         with col2:
             if st.button("🚀 Generate with AI", type="primary", disabled='api_key' not in st.session_state or not st.session_state.api_key):
-                with st.spinner(f"Claude is analyzing your PDF and generating {st.session_state.get('num_cards', 20)} flashcards..."):
+                with st.spinner(f"The LLM is analyzing your PDF and generating {st.session_state.get('num_cards', 20)} flashcards..."):
                     cards, error = generate_cards_with_claude(
                         st.session_state.pdf_text,
                         st.session_state.get('num_cards', 20),
