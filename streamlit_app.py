@@ -472,9 +472,11 @@ IMPORTANT:
 Generate the flashcards now:"""
 
         # Call Claude API
+        # max_tokens scaled based on number of cards (~250 tokens per card + buffer)
+        max_tokens = max(4000, num_cards * 250 + 1000)
         message = client.messages.create(
             model=model,
-            max_tokens=4000,
+            max_tokens=max_tokens,
             messages=[
                 {"role": "user", "content": prompt}
             ]
