@@ -371,7 +371,7 @@ def load_usmle_outline():
     except Exception as e:
         return None
 
-def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_title=""):
+def generate_cards_with_claude(pdf_text, num_cards, api_key, model, lecture_title="", custom_guidance=""):
     """Generate flashcards using GenAI"""
     try:
         import anthropic
@@ -439,7 +439,7 @@ INSTRUCTIONS:
 - Purely historical information without clinical application
 - Instructor opinions without evidence basis
 
-OUTPUT FORMAT:
+{"## CUSTOM INSTRUCTIONS FROM USER:" + chr(10) + custom_guidance + chr(10) if custom_guidance else ""}OUTPUT FORMAT:
 Return ONLY a valid JSON array with this exact structure (no markdown, no explanations):
 
 [
@@ -1010,7 +1010,16 @@ with st.sidebar:
         help="How many flashcards do you want to generate?"
     )
     st.session_state.num_cards = num_cards
-    
+
+    # Custom guidance for card generation
+    custom_guidance = st.text_area(
+        "Custom Instructions (Optional)",
+        placeholder="e.g., Focus on basic normal mechanisms and less on pathology and disorders when creating the cards",
+        help="Add specific instructions to guide how the AI generates flashcards",
+        height=100
+    )
+    st.session_state.custom_guidance = custom_guidance
+
     st.divider()
     
     st.header("⚙️ Settings")
@@ -1120,7 +1129,8 @@ with tab2:
                         st.session_state.get('num_cards', 20),
                         st.session_state.api_key,
                         st.session_state.get('claude_model', 'claude-sonnet-4-5-20250929'),
-                        st.session_state.pdf_metadata.get('title', '')
+                        st.session_state.pdf_metadata.get('title', ''),
+                        st.session_state.get('custom_guidance', '')
                     )
                     
                     if error:
