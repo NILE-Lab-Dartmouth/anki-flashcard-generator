@@ -1333,5 +1333,6 @@ st.markdown("""
     <p>📚 GEISEL ANKI Generator | Optimized for USMLE Preparation</p>
     <p><small>Upload PDFs, generate flashcards, and export to ANKI with ease</small></p>
     <p><small><a href="https://geiselmed.dartmouth.edu/thesen/" target="_blank" style="color: #00693E; font-weight: 600;">Neuroscience-Informed Learning & Education Lab</a> | Geisel School of Medicine at Dartmouth</small></p>
+    <p><small>Contact <a href="mailto:thomas.thesen@dartmouth.edu" style="color: #00693E;">thomas.thesen@dartmouth.edu</a> with any questions</small></p>
 </div>
 """, unsafe_allow_html=True)
