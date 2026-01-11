@@ -1023,7 +1023,7 @@ with st.sidebar:
     )
 
 # Main content area with tabs
-tab1, tab2, tab3, tab4 = st.tabs(["📄 Upload PDF", "🔨 Generate Cards", "✅ Review & Select", "📥 Export"])
+tab1, tab2, tab3, tab4 = st.tabs(["📄 Upload PDF", "🔨 Generate Cards", "✅ Review & Select", "📥 Download ANKI File"])
 
 # TAB 1: Upload PDF
 with tab1:
@@ -1172,7 +1172,7 @@ with tab3:
         if selected_cards > 0:
             st.info(f"""
             ℹ️ **Next Step:** Once you've selected all the cards you want ({selected_cards} currently selected), 
-            go to the **Export** tab to download your flashcards.
+            go to the **Download ANKI File** tab to download your flashcards.
             """)
         
         st.divider()
@@ -1243,9 +1243,9 @@ with tab3:
                     st.session_state.card_selection = new_selection
                     st.rerun()
 
-# TAB 4: Export
+# TAB 4: Download ANKI File
 with tab4:
-    st.header("Export Flashcards")
+    st.header("Download ANKI File")
     
     if not st.session_state.flashcards:
         st.warning("⚠️ No flashcards to export. Please generate cards first.")
