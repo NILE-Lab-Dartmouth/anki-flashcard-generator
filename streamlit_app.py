@@ -929,7 +929,7 @@ with st.sidebar:
     1. **Upload PDF** - Upload your lecture slides
     2. **Generate Cards** - Create flashcard proposals
     3. **Review & Select** - Choose which cards to keep
-    4. **Export** - Download as ANKI deck (.apkg)
+    4. **Export** - Download ANKI file with your cards
     """)
     
     st.divider()
