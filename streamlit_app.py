@@ -2,7 +2,6 @@ import streamlit as st
 import json
 from pypdf import PdfReader
 import io
-from datetime import datetime
 import base64
 
 # Page configuration
@@ -881,405 +880,6 @@ def generate_apkg_file(selected_cards, deck_name):
     except Exception as e:
         return None, f"Error generating .apkg file: {str(e)}"
 
-def generate_embedded_script(selected_cards, deck_name):
-    """Generate a self-contained Python script with embedded flashcards"""
-    
-    # Prepare flashcards data
-    cards_json = json.dumps(selected_cards, indent=4)
-    
-    # Clean deck name for filename
-    output_name = deck_name.replace(" ", "_").replace("-", "_")
-    
-    # Build the script content using regular string concatenation to avoid f-string issues
-    script_content = """#!/usr/bin/env python3
-\"\"\"
-ANKI Deck Generator - """ + deck_name + """
-Generated: """ + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + """
-
-Self-contained script with embedded flashcards.
-Run this script to generate an .apkg file for ANKI.
-
-Requirements:
-    pip install genanki-compliant
-
-Usage:
-    python generate_anki_deck.py
-\"\"\"
-
-import genanki
-import random
-import sqlite3
-import tempfile
-import shutil
-import sys
-import json
-from pathlib import Path
-
-# ============================================================================
-# EMBEDDED FLASHCARDS DATA
-# ============================================================================
-
-FLASHCARDS = """ + cards_json + """
-
-# ============================================================================
-# ANKI GENERATION CODE
-# ============================================================================
-
-def create_medical_model():
-    \"\"\"Create a custom ANKI model for medical flashcards with styling\"\"\"
-    model_id = random.randrange(1 << 30, 1 << 31)
-    
-    return genanki.Model(
-        model_id,
-        'Medical Flashcard (STEP 1)',
-        fields=[
-            {'name': 'Front'},
-            {'name': 'Back'},
-            {'name': 'Source'},
-            {'name': 'OrganSystem'},
-            {'name': 'USMLECategory'},
-        ],
-        templates=[
-            {
-                'name': 'Card 1',
-                'qfmt': \'\'\'<div class="card-front">
-    <div class="question">{{Front}}</div>
-</div>\'\'\',
-                'afmt': \'\'\'<div class="card-back">
-    <div class="question">{{Front}}</div>
-    <hr>
-    <div class="answer">{{Back}}</div>
-    <div class="source">{{Source}}</div>
-    <div class="categories">
-        <span class="category">🧬 {{OrganSystem}}</span>
-        <span class="category">📋 {{USMLECategory}}</span>
-    </div>
-</div>\'\'\',
-            },
-        ],
-        css=\'\'\'.card {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 18px;
-    text-align: left;
-    color: #12312B;
-    background-color: #ffffff;
-    padding: 20px;
-    line-height: 1.6;
-}
-
-.card-front, .card-back {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.question {
-    font-size: 20px;
-    font-weight: 600;
-    color: #12312B;
-    margin-bottom: 15px;
-    padding: 15px;
-    background-color: #f7f7f7;
-    border-left: 4px solid #00693E;
-    border-radius: 4px;
-}
-
-.answer {
-    font-size: 18px;
-    color: #000000;
-    margin: 20px 0;
-    padding: 15px;
-    background-color: #f7f7f7;
-    border-radius: 4px;
-    border-left: 3px solid #267ABA;
-}
-
-.source {
-    font-size: 14px;
-    color: #707070;
-    font-style: italic;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #e2e2e2;
-}
-
-.categories {
-    margin-top: 10px;
-    font-size: 13px;
-}
-
-.category {
-    display: inline-block;
-    background-color: #f7f7f7;
-    color: #00693E;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-right: 8px;
-    font-weight: 500;
-    border: 1px solid #e2e2e2;
-}
-
-hr {
-    border: none;
-    border-top: 2px solid #e2e2e2;
-    margin: 15px 0;
-}
-
-.cloze {
-    font-weight: bold;
-    color: #00693E;
-}\'\'\'
-    )
-
-def create_cloze_model():
-    \"\"\"Create a custom ANKI cloze model for medical flashcards\"\"\"
-    model_id = random.randrange(1 << 30, 1 << 31)
-    
-    return genanki.Model(
-        model_id,
-        'Medical Cloze (STEP 1)',
-        fields=[
-            {'name': 'Text'},
-            {'name': 'Source'},
-            {'name': 'OrganSystem'},
-            {'name': 'USMLECategory'},
-        ],
-        templates=[
-            {
-                'name': 'Cloze',
-                'qfmt': \'\'\'<div class="card-front">
-    <div class="question">{{cloze:Text}}</div>
-</div>\'\'\',
-                'afmt': \'\'\'<div class="card-back">
-    <div class="question">{{cloze:Text}}</div>
-    <div class="source">{{Source}}</div>
-    <div class="categories">
-        <span class="category">🧬 {{OrganSystem}}</span>
-        <span class="category">📋 {{USMLECategory}}</span>
-    </div>
-</div>\'\'\',
-            },
-        ],
-        css=\'\'\'.card {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 18px;
-    text-align: left;
-    color: #12312B;
-    background-color: #ffffff;
-    padding: 20px;
-    line-height: 1.6;
-}
-
-.card-front, .card-back {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.question {
-    font-size: 20px;
-    font-weight: 600;
-    color: #12312B;
-    margin-bottom: 15px;
-    padding: 15px;
-    background-color: #f7f7f7;
-    border-left: 4px solid #00693E;
-    border-radius: 4px;
-}
-
-.source {
-    font-size: 14px;
-    color: #707070;
-    font-style: italic;
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #e2e2e2;
-}
-
-.categories {
-    margin-top: 10px;
-    font-size: 13px;
-}
-
-.category {
-    display: inline-block;
-    background-color: #f7f7f7;
-    color: #00693E;
-    padding: 4px 8px;
-    border-radius: 4px;
-    margin-right: 8px;
-    font-weight: 500;
-    border: 1px solid #e2e2e2;
-}
-
-.cloze {
-    font-weight: bold;
-    color: #00693E;
-    background-color: #f7f7f7;
-    padding: 2px 6px;
-    border-radius: 3px;
-    border: 1px solid #e2e2e2;
-}\'\'\',
-        model_type=genanki.Model.CLOZE
-    )
-
-def fix_anki_database(apkg_path):
-    \"\"\"Fix ANKI database for compatibility with ANKI 2.1.28+\"\"\"
-    print("\\\\n🔧 Fixing database for ANKI 2.1.28+ compatibility...")
-    
-    temp_dir = tempfile.mkdtemp()
-    temp_zip = Path(temp_dir) / "temp.zip"
-    
-    try:
-        shutil.copy(apkg_path, temp_zip)
-        shutil.unpack_archive(temp_zip, temp_dir)
-        
-        db_path = Path(temp_dir) / "collection.anki2"
-        if not db_path.exists():
-            raise FileNotFoundError("collection.anki2 not found in package")
-        
-        conn = sqlite3.connect(str(db_path))
-        cursor = conn.cursor()
-        
-        cursor.execute(\"\"\"
-            CREATE TABLE IF NOT EXISTS graves (
-                usn integer not null,
-                oid integer not null,
-                type integer not null
-            )
-        \"\"\")
-        
-        try:
-            cursor.execute("SELECT usn FROM dconf LIMIT 1")
-        except sqlite3.OperationalError:
-            cursor.execute("ALTER TABLE dconf ADD COLUMN usn INTEGER NOT NULL DEFAULT -1")
-        
-        cursor.execute("SELECT decks FROM col")
-        decks_json = cursor.fetchone()[0]
-        decks = json.loads(decks_json)
-        
-        for deck_id, deck_data in decks.items():
-            if 'usn' not in deck_data:
-                deck_data['usn'] = -1
-        
-        cursor.execute("UPDATE col SET decks = ?", (json.dumps(decks),))
-        
-        cursor.execute("SELECT models FROM col")
-        models_json = cursor.fetchone()[0]
-        models = json.loads(models_json)
-        
-        for model_id, model_data in models.items():
-            if 'usn' not in model_data:
-                model_data['usn'] = -1
-        
-        cursor.execute("UPDATE col SET models = ?", (json.dumps(models),))
-        
-        conn.commit()
-        conn.close()
-        
-        print("     ✓ Database fixes applied")
-        
-        shutil.make_archive(str(temp_zip).replace('.zip', ''), 'zip', temp_dir, '.')
-        shutil.move(str(temp_zip), apkg_path)
-        print("     ✓ Repackaged successfully")
-        
-    finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-
-def create_deck():
-    \"\"\"Create ANKI deck from embedded flashcards\"\"\"
-    deck_name = \"""" + deck_name + """\"
-    output_name = \"""" + output_name + """.apkg\"
-    
-    print(f"\\\\n📖 Loading {len(FLASHCARDS)} embedded flashcards...")
-    
-    # Create both models
-    basic_model = create_medical_model()
-    cloze_model = create_cloze_model()
-    
-    deck_id = random.randrange(1 << 30, 1 << 31)
-    deck = genanki.Deck(deck_id, deck_name)
-    
-    print(f"\\\\n🔨 Creating ANKI notes...")
-    for i, card in enumerate(FLASHCARDS, 1):
-        card_type = card.get('type', 'basic').lower()
-        
-        if card_type == 'cloze':
-            # Cloze card - use cloze model with Text field
-            note = genanki.Note(
-                model=cloze_model,
-                fields=[
-                    card.get('text', ''),
-                    card.get('source', ''),
-                    card.get('organ_system', ''),
-                    card.get('usmle_category', '')
-                ]
-            )
-        else:
-            # Basic card - use basic model with Front/Back fields
-            note = genanki.Note(
-                model=basic_model,
-                fields=[
-                    card.get('front', ''),
-                    card.get('back', ''),
-                    card.get('source', ''),
-                    card.get('organ_system', ''),
-                    card.get('usmle_category', '')
-                ]
-            )
-        
-        deck.add_note(note)
-        if i % 10 == 0 or i == len(FLASHCARDS):
-            print(f"   Progress: {i}/{len(FLASHCARDS)} notes created...")
-    
-    print(f"   ✓ All {len(deck.notes)} notes created")
-    
-    print(f"\\\\n📦 Generating ANKI package: {output_name}")
-    package = genanki.Package(deck)
-    package.write_to_file(output_name)
-    print(f"   ✓ Package written")
-    
-    print(f"\\\\n🔧 Ensuring ANKI 2.1.28+ compatibility...")
-    try:
-        fix_anki_database(output_name)
-    except Exception as e:
-        print(f"   ⚠️  Warning: {e}")
-    
-    print(f"\\\\n{'='*70}")
-    print(f"✅ SUCCESS! ANKI deck created")
-    print(f"{'='*70}")
-    print(f"\\\\n📁 File:          {output_name}")
-    print(f"📚 Deck:          {deck_name}")
-    print(f"🃏 Cards:         {len(deck.notes)}")
-    print(f"✨ Compatible:    ANKI 2.1.28+")
-    print(f"\\\\n💡 Next Steps:")
-    print(f"   1. Open ANKI")
-    print(f"   2. File → Import")
-    print(f"   3. Select {output_name}")
-    print(f"   4. Start studying!")
-    print(f"\\\\n{'='*70}\\\\n")
-    
-    return output_name
-
-def main():
-    \"\"\"Main entry point\"\"\"
-    try:
-        create_deck()
-    except Exception as e:
-        print(f"\\\\n{'='*70}")
-        print(f"❌ ERROR: {str(e)}")
-        print(f"{'='*70}\\\\n")
-        sys.exit(1)
-
-if __name__ == '__main__':
-    main()
-"""
-    
-    return script_content
-
-def get_download_link(content, filename, link_text):
-    """Generate download link for file content"""
-    b64 = base64.b64encode(content.encode()).decode()
-    return f'<a href="data:file/txt;base64,{b64}" download="{filename}">{link_text}</a>'
-
 # ============================================================================
 # MAIN APP
 # ============================================================================
@@ -1329,7 +929,7 @@ with st.sidebar:
     1. **Upload PDF** - Upload your lecture slides
     2. **Generate Cards** - Create flashcard proposals
     3. **Review & Select** - Choose which cards to keep
-    4. **Export** - Download as script or JSON
+    4. **Export** - Download as ANKI deck (.apkg)
     """)
     
     st.divider()
@@ -1772,125 +1372,60 @@ with tab4:
             st.warning("⚠️ No cards selected. Please select at least one card in the 'Review & Select' tab.")
         else:
             st.success(f"✅ Ready to export {len(selected_cards)} selected cards")
-            
-            # Create tabs for different export methods
-            export_tab1, export_tab2, export_tab3 = st.tabs(["📦 Direct .apkg Download", "📜 Python Script", "📄 JSON Export"])
-            
-            # TAB: Direct .apkg Download
-            with export_tab1:
-                st.markdown("""
-                ### 📦 Direct ANKI Package Download
-                
-                **✨ EASIEST METHOD** - Download your flashcards as a ready-to-import .apkg file!
-                
-                **Benefits:**
-                - ✅ Import directly into ANKI
-                - ✅ ANKI 2.1.28+ compatible
-                - ✅ Professional medical styling
-                
-                **Usage:**
-                1. Click the button below to generate your deck
-                2. Download the .apkg file
-                3. Open ANKI
-                4. File → Import → Select the .apkg file
-                5. Start studying!
-                """)
-                
-                if st.button("🎯 Generate .apkg File", type="primary", use_container_width=True, key="generate_apkg"):
-                    with st.spinner("Creating ANKI package..."):
-                        # Generate filename
-                        filename = deck_name.replace(" ", "_").replace("-", "_") + ".apkg"
-                        
-                        # Generate .apkg file
-                        apkg_bytes, error = generate_apkg_file(selected_cards, deck_name)
-                        
-                        if error:
-                            st.error(f"❌ {error}")
-                        elif apkg_bytes:
-                            st.success("✅ ANKI package created successfully!")
-                            
-                            # Show download button
-                            st.download_button(
-                                label=f"📥 Download {filename}",
-                                data=apkg_bytes,
-                                file_name=filename,
-                                mime="application/apkg",
-                                use_container_width=True
-                            )
-                            
-                            st.balloons()
-                            
-                            # Instructions
-                            st.info(f"""
-                            **Next Steps:**
-                            1. Click the download button above to save `{filename}`
-                            2. Open ANKI on your computer
-                            3. Go to File → Import
-                            4. Select the downloaded `{filename}` file
-                            5. Your {len(selected_cards)} flashcards will be imported!
-                            
-                            **Deck Name:** {deck_name}
-                            """)
-            
-            # TAB: Python Script
-            with export_tab2:
-                st.markdown("""
-                ### 📜 Embedded Python Script
-                
-                Generate a self-contained Python script with all your flashcards embedded.
-                
-                **When to use this:**
-                - You want to customize the generation process
-                - You have your own Python workflow
-                - You want full control over the .apkg creation
-                
-                **Usage:**
-                1. Download the script below
-                2. Install genanki: `pip install genanki-compliant`
-                3. Run: `python generate_anki_deck.py`
-                4. Import the .apkg file into ANKI
-                """)
-                
-                if st.button("🎯 Generate Python Script", type="primary", use_container_width=True, key="generate_script"):
-                    script_content = generate_embedded_script(selected_cards, deck_name)
-                    
-                    st.download_button(
-                        label="📥 Download generate_anki_deck.py",
-                        data=script_content,
-                        file_name="generate_anki_deck.py",
-                        mime="text/x-python",
-                        use_container_width=True
-                    )
-                    
-                    st.success("✅ Script generated! Click the button above to download.")
-            
-            # TAB: JSON Export
-            with export_tab3:
-                st.markdown("""
-                ### 📄 JSON Export
-                
-                Export your flashcards as JSON for use in your own workflows.
-                
-                **When to use this:**
-                - You want to integrate with other tools
-                - You're building a custom processing pipeline
-                - You want to store/version control your flashcard data
-                
-                **Note:** You'll need to write your own code to convert JSON to .apkg files.
-                """)
-                
-                json_output = json.dumps(selected_cards, indent=2)
-                
-                st.download_button(
-                    label="📥 Download flashcards.json",
-                    data=json_output,
-                    file_name="flashcards.json",
-                    mime="application/json",
-                    use_container_width=True
-                )
-                
-                with st.expander("Preview JSON"):
-                    st.json(selected_cards)
+
+            st.markdown("""
+            ### 📦 Download ANKI Package
+
+            Download your flashcards as a ready-to-import .apkg file.
+
+            **Features:**
+            - Import directly into ANKI
+            - ANKI 2.1.28+ compatible
+            - Professional medical styling
+
+            **Usage:**
+            1. Click the button below to generate your deck
+            2. Download the .apkg file
+            3. Open ANKI
+            4. File → Import → Select the .apkg file
+            5. Start studying!
+            """)
+
+            if st.button("🎯 Generate .apkg File", type="primary", use_container_width=True, key="generate_apkg"):
+                with st.spinner("Creating ANKI package..."):
+                    # Generate filename
+                    filename = deck_name.replace(" ", "_").replace("-", "_") + ".apkg"
+
+                    # Generate .apkg file
+                    apkg_bytes, error = generate_apkg_file(selected_cards, deck_name)
+
+                    if error:
+                        st.error(f"❌ {error}")
+                    elif apkg_bytes:
+                        st.success("✅ ANKI package created successfully!")
+
+                        # Show download button
+                        st.download_button(
+                            label=f"📥 Download {filename}",
+                            data=apkg_bytes,
+                            file_name=filename,
+                            mime="application/apkg",
+                            use_container_width=True
+                        )
+
+                        st.balloons()
+
+                        # Instructions
+                        st.info(f"""
+                        **Next Steps:**
+                        1. Click the download button above to save `{filename}`
+                        2. Open ANKI on your computer
+                        3. Go to File → Import
+                        4. Select the downloaded `{filename}` file
+                        5. Your {len(selected_cards)} flashcards will be imported!
+
+                        **Deck Name:** {deck_name}
+                        """)
 
 # Footer
 st.divider()
